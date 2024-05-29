@@ -1,2 +1,0 @@
-# palabras-incompletas
-palabras incompletas
