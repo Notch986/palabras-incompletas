@@ -8,10 +8,10 @@ import os
 if not os.path.join(nltk.data.path[0], 'cess_esp'):
     nltk.download('cess_esp')
 
-def distancia_levenshtein(s1, s2):
+def distancia_levenshtein(s1, s2, umbral):
     m, n = len(s1), len(s2)
     if m < n:
-        return distancia_levenshtein(s2, s1)
+        return distancia_levenshtein(s2, s1, umbral)
 
     previous_row = range(n + 1)
     for i, c1 in enumerate(s1):
@@ -21,17 +21,19 @@ def distancia_levenshtein(s1, s2):
             deletions = current_row[j] + 1
             substitutions = previous_row[j] + (c1 != c2)
             current_row.append(min(insertions, deletions, substitutions))
+        if min(current_row) > umbral:
+            return umbral + 1  # Si la mínima distancia supera el umbral, no es necesario continuar
         previous_row = current_row
 
     return previous_row[-1]
 
-def es_palabra_incorrecta(palabra, diccionario, umbral=0):
+def es_palabra_incorrecta(palabra, diccionario, umbral=0.5):
     if palabra in diccionario:
         return False
     palabra_len = len(palabra)
     with ThreadPoolExecutor() as executor:
         resultados = list(executor.map(lambda palabra_correcta: abs(len(palabra_correcta) - palabra_len) > umbral or
-                                                          distancia_levenshtein(palabra, palabra_correcta) > umbral, diccionario))
+                                                          distancia_levenshtein(palabra, palabra_correcta, umbral) > umbral, diccionario))
     return all(resultados)
 
 def limpiar_texto(texto):
@@ -68,7 +70,7 @@ def cargar_diccionario_nltk():
 # Medir el tiempo de ejecución
 start_time = time.time()
 
-archivo_diccionario = 'esp1.txt'
+archivo_diccionario = 'esp3.txt'
 
 textos = [
     "El trbajo eta inompleto poqe fue apido",
@@ -83,12 +85,8 @@ textos = [
     "Esa novela tiene una trama apasionante, la recomiendo",
 ]
 
-
-# Contar palabras incorrectas con umbral 0 para mayor exactitud
-umbral = 0
-
 for texto in textos:
-    palabras_incorrectas, detalles_incorrectos = contar_palabras_incorrectas(texto, cargar_diccionario_nltk(), umbral)
+    palabras_incorrectas, detalles_incorrectos = contar_palabras_incorrectas(texto, cargar_diccionario_nltk())
     print(f"Texto: {texto}")
     print(f"Número de palabras incorrectas: {palabras_incorrectas}")
     print(f"Palabras incorrectas: {detalles_incorrectos}")
