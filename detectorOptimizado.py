@@ -22,7 +22,7 @@ def distancia_levenshtein(s1, s2):
             substitutions = previous_row[j] + (c1 != c2)
             current_row.append(min(insertions, deletions, substitutions))
         previous_row = current_row
-    
+
     return previous_row[-1]
 
 def es_palabra_incorrecta(palabra, diccionario, umbral=0):
@@ -44,13 +44,18 @@ def contar_palabras_incorrectas(texto, diccionario, umbral=0):
     palabras = texto_limpio.split()
     palabras_incorrectas = 0
     detalles_incorrectos = []
-    
+
     for palabra in palabras:
         if es_palabra_incorrecta(palabra, diccionario, umbral):
             palabras_incorrectas += 1
             detalles_incorrectos.append(palabra)
-            
+
     return palabras_incorrectas, detalles_incorrectos
+
+def cargar_diccionario(archivo):
+    with open(archivo, 'r', encoding='utf-8') as file:
+        diccionario = set(file.read().splitlines())  # Usar set para búsquedas rápidas
+    return diccionario
 
 def cargar_diccionario_nltk():
     palabras = cess_esp.words()
@@ -58,22 +63,38 @@ def cargar_diccionario_nltk():
     return diccionario
 
 # Cargar diccionario desde nltk
-diccionario = cargar_diccionario_nltk()
-
-# Texto a analizar
-texto = "El trbajo eta inompleto poqe fue apido"
+#diccionario = cargar_diccionario_nltk()
 
 # Medir el tiempo de ejecución
 start_time = time.time()
 
+archivo_diccionario = 'esp1.txt'
+
+textos = [
+    "El trbajo eta inompleto poqe fue apido",
+    "La combnicación de cocolates y flores fué ideal",
+    "Me gustaría comprar un perro de raca pequeña",
+    "Estoy deseando probar esa nuva marca de helado",
+    "No entendí el acertijo, era demaciado complicado",
+    "Mi hermano compitió en una competición de artes marciales",
+    "El café estava delicioso, no me gusto el pastel",
+    "El estudiante tenía que entregar un travajo muy extenso",
+    "Fuimos al cine pero la película estubo aburrida",
+    "Esa novela tiene una trama apasionante, la recomiendo",
+]
+
+
 # Contar palabras incorrectas con umbral 0 para mayor exactitud
 umbral = 0
-palabras_incorrectas, detalles_incorrectos = contar_palabras_incorrectas(texto, diccionario, umbral)
+
+for texto in textos:
+    palabras_incorrectas, detalles_incorrectos = contar_palabras_incorrectas(texto, cargar_diccionario_nltk(), umbral)
+    print(f"Texto: {texto}")
+    print(f"Número de palabras incorrectas: {palabras_incorrectas}")
+    print(f"Palabras incorrectas: {detalles_incorrectos}")
+    print()
 
 end_time = time.time()
 elapsed_time = end_time - start_time
 
-print(f"Número de palabras incorrectas: {palabras_incorrectas}")
-print(f"Palabras incorrectas: {detalles_incorrectos}")
 print(f"Tiempo de ejecución: {elapsed_time:.2f} segundos")
-
