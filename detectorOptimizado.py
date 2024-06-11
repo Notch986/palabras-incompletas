@@ -3,9 +3,10 @@ import nltk
 import time
 from concurrent.futures import ThreadPoolExecutor
 from nltk.corpus import cess_esp
+import os
 
-# Descargar el corpus si no lo has hecho ya
-nltk.download('cess_esp')
+if not os.path.join(nltk.data.path[0], 'cess_esp'):
+    nltk.download('cess_esp')
 
 def distancia_levenshtein(s1, s2):
     m, n = len(s1), len(s2)
