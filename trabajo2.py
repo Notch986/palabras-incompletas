@@ -84,7 +84,8 @@ trie = load_words_from_file(file_path)
 bigrams = load_bigrams(file_path)
 
 # Ejemplo de uso
-sentence = "Quero progr una compu con inteli artif"
+# sentence = "Quero progr una compu con inteli artif"
+sentence = "El trbajo esta inompleto poqye fue apido"
 completed_sentence = complete_sentence(trie, bigrams, sentence)
 print(completed_sentence)
 
