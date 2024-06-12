@@ -3,7 +3,6 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-
 public class detectorOptimizado {
     private static final double UMBRAL = 0.5;
 
@@ -39,67 +38,16 @@ public class detectorOptimizado {
         System.out.printf("Tiempo de ejecución: %.2f segundos\n", elapsedTime / 1000.0);
     }
 
-    private static Set<String> cargarDiccionario(String archivo) throws IOException {
-        return new HashSet<>(Files.readAllLines(Paths.get(archivo)));
-    }
+    // Parte 1: Algoritmo de Levenshtein
+    // Esta parte será explicada por la primera persona
 
-    private static class Resultado {
-        int numeroIncorrectas;
-        List<String> palabrasIncorrectas;
-
-        Resultado(int numeroIncorrectas, List<String> palabrasIncorrectas) {
-            this.numeroIncorrectas = numeroIncorrectas;
-            this.palabrasIncorrectas = palabrasIncorrectas;
-        }
-    }
-
-    private static Resultado contarPalabrasIncorrectas(String texto, Set<String> diccionario, double umbral) {
-        String textoLimpio = limpiarTexto(texto);
-        String[] palabras = textoLimpio.split("\\s+");
-        int palabrasIncorrectas = 0;
-        List<String> detallesIncorrectos = new ArrayList<>();
-
-        for (String palabra : palabras) {
-            if (esPalabraIncorrecta(palabra, diccionario, umbral)) {
-                palabrasIncorrectas++;
-                detallesIncorrectos.add(palabra);
-            }
-        }
-
-        return new Resultado(palabrasIncorrectas, detallesIncorrectos);
-    }
-
-    private static boolean esPalabraIncorrecta(String palabra, Set<String> diccionario, double umbral) {
-        if (diccionario.contains(palabra)) {
-            return false;
-        }
-        int palabraLen = palabra.length();
-        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        List<Future<Boolean>> resultados = new ArrayList<>();
-
-        for (String palabraCorrecta : diccionario) {
-            resultados.add(executor.submit(() -> {
-                if (Math.abs(palabraCorrecta.length() - palabraLen) > umbral * palabraLen) {
-                    return true;
-                }
-                return distanciaLevenshtein(palabra, palabraCorrecta, (int) (umbral * palabraLen)) > umbral * palabraLen;
-            }));
-        }
-
-        executor.shutdown();
-        try {
-            for (Future<Boolean> resultado : resultados) {
-                if (!resultado.get()) {
-                    return true;
-                }
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
+    /**
+     * Método que calcula la distancia de Levenshtein entre dos cadenas
+     * @param s1 Primera cadena
+     * @param s2 Segunda cadena
+     * @param umbral Umbral para la distancia de Levenshtein
+     * @return La distancia de Levenshtein
+     */
     private static int distanciaLevenshtein(String s1, String s2, int umbral) {
         int m = s1.length();
         int n = s2.length();
@@ -133,6 +81,11 @@ public class detectorOptimizado {
         return previousRow[n];
     }
 
+    /**
+     * Encuentra el índice del valor mínimo en un array
+     * @param array Array de enteros
+     * @return Índice del valor mínimo
+     */
     private static int minIndex(int[] array) {
         int minIndex = 0;
         for (int i = 1; i < array.length; i++) {
@@ -143,7 +96,102 @@ public class detectorOptimizado {
         return minIndex;
     }
 
+    // Parte 2: Verificación de Palabras Incorrectas y Carga del Diccionario
+    // Esta parte será explicada por la segunda persona
+
+    /**
+     * Método que verifica si una palabra es incorrecta
+     * @param palabra La palabra a verificar
+     * @param diccionario El conjunto de palabras correctas
+     * @param umbral El umbral de distancia de Levenshtein
+     * @return Verdadero si la palabra es incorrecta, falso si es correcta
+     */
+    private static boolean esPalabraIncorrecta(String palabra, Set<String> diccionario, double umbral) {
+        if (diccionario.contains(palabra)) {
+            return false;
+        }
+        int palabraLen = palabra.length();
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        List<Future<Boolean>> resultados = new ArrayList<>();
+
+        for (String palabraCorrecta : diccionario) {
+            resultados.add(executor.submit(() -> {
+                if (Math.abs(palabraCorrecta.length() - palabraLen) > umbral * palabraLen) {
+                    return true;
+                }
+                return distanciaLevenshtein(palabra, palabraCorrecta, (int) (umbral * palabraLen)) > umbral * palabraLen;
+            }));
+        }
+
+        executor.shutdown();
+        try {
+            for (Future<Boolean> resultado : resultados) {
+                if (!resultado.get()) {
+                    return true;
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    /**
+     * Carga el diccionario desde un archivo
+     * @param archivo Ruta del archivo
+     * @return Un conjunto de palabras del diccionario
+     * @throws IOException Si ocurre un error al leer el archivo
+     */
+    private static Set<String> cargarDiccionario(String archivo) throws IOException {
+        return new HashSet<>(Files.readAllLines(Paths.get(archivo)));
+    }
+
+    /**
+     * Limpia el texto eliminando caracteres no alfanuméricos y convirtiéndolo a minúsculas
+     * @param texto Texto a limpiar
+     * @return Texto limpio
+     */
     private static String limpiarTexto(String texto) {
         return texto.toLowerCase().replaceAll("[^\\w\\s]", "");
+    }
+
+    // Parte 3: Función Principal (main) que Cuenta las Palabras Incorrectas y Mide el Tiempo de Ejecución
+    // Esta parte será explicada por la tercera persona
+
+    /**
+     * Cuenta las palabras incorrectas en un texto
+     * @param texto El texto a analizar
+     * @param diccionario El conjunto de palabras correctas
+     * @param umbral Umbral para la distancia de Levenshtein
+     * @return Un objeto Resultado con el número de palabras incorrectas y la lista de palabras incorrectas
+     */
+    private static Resultado contarPalabrasIncorrectas(String texto, Set<String> diccionario, double umbral) {
+        String textoLimpio = limpiarTexto(texto);
+        String[] palabras = textoLimpio.split("\\s+");
+        int palabrasIncorrectas = 0;
+        List<String> detallesIncorrectos = new ArrayList<>();
+
+        for (String palabra : palabras) {
+            if (esPalabraIncorrecta(palabra, diccionario, umbral)) {
+                palabrasIncorrectas++;
+                detallesIncorrectos.add(palabra);
+            }
+        }
+
+        return new Resultado(palabrasIncorrectas, detallesIncorrectos);
+    }
+
+    /**
+     * Clase para almacenar el resultado del análisis de palabras incorrectas
+     */
+    private static class Resultado {
+        int numeroIncorrectas;
+        List<String> palabrasIncorrectas;
+
+        Resultado(int numeroIncorrectas, List<String> palabrasIncorrectas) {
+            this.numeroIncorrectas = numeroIncorrectas;
+            this.palabrasIncorrectas = palabrasIncorrectas;
+        }
     }
 }
