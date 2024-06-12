@@ -70,7 +70,7 @@ def cargar_diccionario_nltk():
 # Medir el tiempo de ejecución
 start_time = time.time()
 
-archivo_diccionario = 'esp3.txt'
+archivo_diccionario = 'esp1.txt'
 
 textos = [
     "El trbajo eta inompleto poqe fue apido",
@@ -87,6 +87,7 @@ textos = [
 
 for texto in textos:
     palabras_incorrectas, detalles_incorrectos = contar_palabras_incorrectas(texto, cargar_diccionario_nltk())
+    #palabras_incorrectas, detalles_incorrectos = contar_palabras_incorrectas(texto, cargar_diccionario(archivo_diccionario))
     print(f"Texto: {texto}")
     print(f"Número de palabras incorrectas: {palabras_incorrectas}")
     print(f"Palabras incorrectas: {detalles_incorrectos}")
